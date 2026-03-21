@@ -48,5 +48,8 @@ int main() {
         cout << str << endl;
     }
 
+    cin.ignore();
+    cin.get();
+
     return 0;
 }

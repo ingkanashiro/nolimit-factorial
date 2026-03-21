@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 4.1)
 project(factorial)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 
 set(BOOST_ROOT "C:/msys64/mingw64")
 set(Boost_INCLUDE_DIR "C:/msys64/mingw64/include")
