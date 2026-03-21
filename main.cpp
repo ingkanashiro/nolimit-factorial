@@ -17,7 +17,7 @@ int main() {
         throw(runtime_error("factorial of negative."));
     }
 
-    cout << "Calculating... ";
+    cout << "\nCalculating... ";
     if (x == 0) {
         cout << "0! = 1" << endl;
         return 0;
@@ -32,7 +32,7 @@ int main() {
     cout << "[Done!]\nStringing... ";
     string str = factorial.str();
 
-    cout << "[Done!]" << endl << endl;
+    cout << "[Done!]\n\n";
 
     if (str.length() < 150) {
         cout << x << "! = " << str << endl;
@@ -45,8 +45,11 @@ int main() {
     cin >> input;
 
     if (input == "expand") {
-        cout << str << endl;
+        cout << '\n' << str << endl;
     }
+
+    cin.ignore();
+    cin.get();
 
     return 0;
 }
