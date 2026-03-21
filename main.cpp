@@ -36,6 +36,10 @@ int main() {
 
     if (str.length() < 150) {
         cout << x << "! = " << str << endl;
+
+        cin.ignore();
+        cin.get();
+
         return 0;
     }
 
