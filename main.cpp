@@ -120,6 +120,9 @@ string clockify(double time) {
 
 int main() {
 
+    cout << "----- NO-LIMIT FACTORIAL CALCULATOR -----\n"
+            "Please, enter a number to calculate its factorial\n" << endl;
+
     cpp_int x;
     cin >> x;
 
@@ -192,7 +195,7 @@ int main() {
     }
 
     output.close();
-    cout << "Results got exported to " << x << "-factorial.txt" << endl;
+    cout << "\nResults got exported to " << x << "-factorial.txt" << endl;
 
     cin.ignore();
     cin.get();
