@@ -1,11 +1,45 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <boost/math/ccmath/abs.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 
 using namespace std;
 using namespace boost::multiprecision;
 
+const string FUNCTION_LIST_LANG[] = {
+    "factorial",
+    "double factorial",
+    "termial"
+};
+const string FUNCTION_FILE_SUFFIX[] = {
+    "fact",
+    "dfac",
+    "term"
+};
+
+const char HASH_VALUES[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+    'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+    'u', 'v', 'w', 'x', 'y', 'z',
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+    'U', 'V', 'W', 'X', 'Y', 'Z', '-', '_'
+};
+
+string hashCode(cpp_int arg) {
+
+    cpp_int numOfDigits = (msb(arg) / 6) + 1;
+    string hash = "";
+
+    while (numOfDigits--) {
+        hash = HASH_VALUES[(int)(arg % 64)] + hash;
+        arg /= 64;
+    }
+
+    return hash;
+}
 
 string clockify(double time) {
 
@@ -118,16 +152,26 @@ string clockify(double time) {
     return result;
 }
 
-int main() {
+string stringify(cpp_int arg, string& calcTime, string& strgTime, auto startCalc) {
+    cout << "[Done!]\nStringing... ";
 
-    cout << "----- NO-LIMIT FACTORIAL CALCULATOR -----\n"
-            "Please, enter a number to calculate its factorial\n" << endl;
+    auto startStr = chrono::high_resolution_clock::now();
+    string str = arg.str();
 
-    cpp_int x;
-    cin >> x;
+    cout << "[Done!]\n\n";
 
-    cpp_int factorial = 1;
+    auto finishProc = chrono::high_resolution_clock::now();
 
+    chrono::duration<double> calcTime_s = startStr - startCalc;
+    chrono::duration<double> strgTime_s = finishProc - startStr;
+
+    calcTime = clockify(calcTime_s.count());
+    strgTime = clockify(strgTime_s.count());
+
+    return str;
+}
+
+string factorial(cpp_int x, string& calcTime, string& strgTime) {
     if (x < 0) {
         throw(runtime_error("factorial of negative."));
     }
@@ -137,65 +181,177 @@ int main() {
     auto startCalc = chrono::high_resolution_clock::now();
 
     if (x == 0) {
-        cout << "0! = 1" << endl;
-        return 0;
+        return "1";
     }
 
+    cpp_int result = 1;
     if (x > 0) {
         for (cpp_int i = 1; i <= x; i++) {
-            factorial *= i;
+            result *= i;
         }
     }
 
-    cout << "[Done!]\nStringing... ";
+    string str = stringify(result, calcTime, strgTime, startCalc);
 
-    auto startStr = chrono::high_resolution_clock::now();
-    string str = factorial.str();
+    return str;
+}
 
-    cout << "[Done!]\n\n";
-
-    auto finishProc = chrono::high_resolution_clock::now();
-
-    chrono::duration<double> calcTime_s = startStr - startCalc;
-    chrono::duration<double> strgTime_s = finishProc - startStr;
-
-    string calcTime = clockify(calcTime_s.count());
-    string strgTime = clockify(strgTime_s.count());
-
-    if (str.length() < 150) {
-        cout << x << "! = " << str << endl;
-
-        cin.ignore();
-        cin.get();
-
-        return 0;
+string double_factorial(cpp_int x, string& calcTime, string& strgTime) {
+    if (x < 0) {
+        throw(runtime_error("factorial of negative."));
     }
 
-    cout << x << "! = " << str[0] << "." << str.substr(1, 100) << "E+" << str.length() << endl;
+    cout << "\nCalculating... ";
 
-    ofstream output(to_string(x) + "-factorial.txt");
+    auto startCalc = chrono::high_resolution_clock::now();
+
+    if (x == 0) {
+        return "1";
+    }
+
+    cpp_int result = 1;
+    if (x > 0) {
+        for (cpp_int i = x; i >= 1; i -= 2) {
+            result *= i;
+        }
+    }
+
+    string str = stringify(result, calcTime, strgTime, startCalc);
+
+    return str;
+}
+
+string termial(cpp_int x, string& calcTime, string& strgTime) {
+    if (x < 0) {
+        throw(runtime_error("termial of negative."));
+    }
+
+    cout << "\nCalculating... ";
+
+    auto startCalc = chrono::high_resolution_clock::now();
+
+    cpp_int result = (x * (x + 1)) / 2;
+    string str = stringify(result, calcTime, strgTime, startCalc);
+
+    return str;
+}
+
+void print(string arg, cpp_int x, string func, int func_id, string calcTime, string strgTime) {
+
+    if (arg.length() < 150) {
+        cout << x << func << " = " << arg << endl;
+    }
+    else {
+        cout << x << func << " = " << arg[0] << "." << arg.substr(1, 100) << "E+" << arg.length() << endl;
+    }
+
+    ofstream output(hashCode(x) + "-" + FUNCTION_FILE_SUFFIX[func_id] + ".txt");
 
     if (!output.is_open()) {
         throw(runtime_error("could not open output file."));
     }
 
     output << "----- NO-LIMIT FACTORIAL REPORT -----\n" << endl;
-    output << "Input: " << x << '\n' << '\n';
+    output << "Input: " << FUNCTION_LIST_LANG[func_id] << " of " << x << '\n' << '\n';
 
     output << "Calculations [==========][COMPLETED in " << calcTime << "]\n"
               "Stringing    [==========][COMPLETED in " << strgTime << "]\n\n";
 
     output << "----- NO-LIMIT FACTORIAL RESULT -----\n" << endl;
-    if (str.length() < 150) {
-        output << "Short-form: " << str << endl;
+    if (arg.length() < 150) {
+        output << "Short-form: " << arg << endl;
     }
     else {
-        output << "Short-form: " << str[0] << "." << str.substr(1,100) << "E+" << str.length() << endl;
-        output << "Long-form: \n" << str << endl;
+        output << "Short-form: " << arg[0] << "." << arg.substr(1,100) << "E+" << arg.length() << endl;
+        output << "Long-form: \n" << arg << endl;
     }
 
     output.close();
-    cout << "\nResults got exported to " << x << "-factorial.txt" << endl;
+    cout << "\nResults got exported to " << hashCode(x) << "-" << FUNCTION_FILE_SUFFIX[func_id] << ".txt" << endl;
+
+}
+
+int main() {
+    cout << "----- NO-LIMIT FACTORIAL CALCULATOR -----\n"
+            "Please, enter a computation (e.g.: 10!, 500!!, 365?, ...)\n" << endl;
+
+    string input;
+    cin >> input;
+
+    // Get the function to apply by splitting the input
+    int funcPtr = -1;
+    for (int i = 0; i < input.length(); i++) {
+        if (input[i] == '!' || input[i] == '?') {
+            funcPtr = i;
+            break;
+        }
+    }
+
+    int func_id;
+
+    /*  FUNCTION ID LIST:
+     *
+     *  0 -> factorial (!)
+     *  1 -> double factorial (!!)
+     *  2 -> termial (?)
+     *  3 -> ...
+     *
+     */
+
+    string value, func;
+
+    if (funcPtr == -1) {    // Assume factorial function by default
+        func_id = 0;
+        value = input;
+    }
+    else {
+
+        value = input.substr(0, funcPtr);
+        func = input.substr(funcPtr, input.length() - 1);
+
+        switch (func[0]) {
+            case '!':
+
+                if (func.length() == 2) {
+                    func_id = 1;
+                }
+                else if (func.length() == 1) {
+                    func_id = 0;
+                }
+                else {
+                    throw runtime_error("could not resolve symbol " + func + " at input");
+                }
+
+                break;
+
+            case '?':
+                func_id = 2;
+                break;
+
+            default:
+                throw runtime_error("could not resolve symbol " + func + " at input");
+        }
+    }
+
+    cpp_int x(value);
+    string calcTime, strgTime;
+    string result;
+
+    switch (func_id) {
+        case 0:
+            result = factorial(x, calcTime, strgTime);
+            break;
+
+        case 1:
+            result = double_factorial(x, calcTime, strgTime);
+            break;
+
+        case 2:
+            result = termial(x, calcTime, strgTime);
+            break;
+    }
+
+    print(result, x, func, func_id, calcTime, strgTime);
 
     cin.ignore();
     cin.get();
