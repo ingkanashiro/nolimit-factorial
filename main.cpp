@@ -153,7 +153,7 @@ string clockify(double time) {
     return result;
 }
 
-void print(mpz_class x, mpz_class arg, string func, string suffix, auto startCalc) {
+void print(mpz_class x, mpz_class arg, string func, string suffix, string symbol, auto startCalc) {
 
     cout << "[Done!]\nExporting... ";
 
@@ -161,8 +161,8 @@ void print(mpz_class x, mpz_class arg, string func, string suffix, auto startCal
     string result = arg.get_str();
     string abr = "";
 
-    if (result.length() < 150) {
-        abr = result[0] + "." + result.substr(1, 100) + "E+" + to_string(result.length());
+    if (result.length() >= 150) {
+        abr = result.substr(0, 1) + "." + result.substr(1, 100) + "E+" + to_string(result.length());
     }
 
     auto endProc = chrono::high_resolution_clock::now();
@@ -175,12 +175,12 @@ void print(mpz_class x, mpz_class arg, string func, string suffix, auto startCal
     string calcTime = clockify(calcTime_s.count());
     string expTime = clockify(expTime_s.count());
 
-    if (result.length() < 150) {
-        cout << x << func << " = " << result << endl;
-    }
-    else {
-        cout << x << func << " = " << abr << endl;
-    }
+    // if (result.length() < 150) {
+    //     cout << x << symbol << " = " << result << endl;
+    // }
+    // else {
+    //     cout << x << symbol << " = " << abr << endl;
+    // }
 
     ofstream output(hashCode(x) + "-" + suffix + ".txt");
 
@@ -220,7 +220,7 @@ void factorial(mpz_class x, string& calcTime, string& strgTime) {
     auto startCalc = chrono::high_resolution_clock::now();
 
     if (x == 0) {
-        print(0, 1, "factorial", "fact", startCalc);
+        print(0, 1, "factorial", "fact", "!", startCalc);
         return;
     }
 
@@ -231,7 +231,7 @@ void factorial(mpz_class x, string& calcTime, string& strgTime) {
         }
     }
 
-    print(x, result, "factorial", "fact", startCalc);
+    print(x, result, "factorial", "fact", "!", startCalc);
     return;
 }
 
@@ -245,7 +245,7 @@ void double_factorial(mpz_class x, string& calcTime, string& strgTime) {
     auto startCalc = chrono::high_resolution_clock::now();
 
     if (x == 0) {
-        print(0, 1, "double factorial", "dfac", startCalc);
+        print(0, 1, "double factorial", "dfac", "!!", startCalc);
         return;
     }
 
@@ -256,7 +256,7 @@ void double_factorial(mpz_class x, string& calcTime, string& strgTime) {
         }
     }
 
-    print(x, result, "double factorial", "dfac", startCalc);
+    print(x, result, "double factorial", "dfac", "!!", startCalc);
     return;
 }
 
@@ -271,7 +271,7 @@ void termial(mpz_class x, string& calcTime, string& strgTime) {
 
     mpz_class result = (x * (x + 1)) / 2;
 
-    print(x, result, "termial", "term", startCalc);
+    print(x, result, "termial", "term", "?", startCalc);
     return;
 }
 
