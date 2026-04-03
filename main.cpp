@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include <chrono>
-#include <boost/math/ccmath/abs.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
+#include <gmpxx.h>
+#include <gmp.h>
+#include <string>
 
 using namespace std;
-using namespace boost::multiprecision;
 
 const string FUNCTION_LIST_LANG[] = {
     "factorial",
@@ -28,13 +29,13 @@ const char HASH_VALUES[] = {
     'U', 'V', 'W', 'X', 'Y', 'Z', '-', '_'
 };
 
-string hashCode(cpp_int arg) {
+string hashCode(mpz_class arg) {
 
-    cpp_int numOfDigits = (msb(arg) / 6) + 1;
+    size_t numOfDigits = mpz_sizeinbase(arg.get_mpz_t(), 10);
     string hash = "";
 
     while (numOfDigits--) {
-        hash = HASH_VALUES[(int)(arg % 64)] + hash;
+        hash = HASH_VALUES[(arg.get_si() % 64)] + hash;
         arg /= 64;
     }
 
@@ -152,26 +153,64 @@ string clockify(double time) {
     return result;
 }
 
-string stringify(cpp_int arg, string& calcTime, string& strgTime, auto startCalc) {
-    cout << "[Done!]\nStringing... ";
+void print(mpz_class x, mpz_class arg, string func, string suffix, auto startCalc) {
 
-    auto startStr = chrono::high_resolution_clock::now();
-    string str = arg.str();
+    cout << "[Done!]\nExporting... ";
+
+    auto startExp = chrono::high_resolution_clock::now();
+    string result = arg.get_str();
+    string abr = "";
+
+    if (result.length() < 150) {
+        abr = result[0] + "." + result.substr(1, 100) + "E+" + to_string(result.length());
+    }
+
+    auto endProc = chrono::high_resolution_clock::now();
 
     cout << "[Done!]\n\n";
 
-    auto finishProc = chrono::high_resolution_clock::now();
+    chrono::duration<double> calcTime_s = startExp - startCalc;
+    chrono::duration<double> expTime_s = endProc - startExp;
 
-    chrono::duration<double> calcTime_s = startStr - startCalc;
-    chrono::duration<double> strgTime_s = finishProc - startStr;
+    string calcTime = clockify(calcTime_s.count());
+    string expTime = clockify(expTime_s.count());
 
-    calcTime = clockify(calcTime_s.count());
-    strgTime = clockify(strgTime_s.count());
+    if (result.length() < 150) {
+        cout << x << func << " = " << result << endl;
+    }
+    else {
+        cout << x << func << " = " << abr << endl;
+    }
 
-    return str;
+    ofstream output(hashCode(x) + "-" + suffix + ".txt");
+
+    if (!output.is_open()) {
+        throw(runtime_error("could not open output file."));
+    }
+
+    output << "----- NO-LIMIT FACTORIAL REPORT -----\n" << endl;
+    output << "Input: " << func << " of " << x << '\n' << '\n';
+
+    output << "Calculations [==========][COMPLETED in " << calcTime << "]\n"
+              "Exporting    [==========][COMPLETED in " << expTime << "]\n\n";
+
+    output << "----- NO-LIMIT FACTORIAL RESULT -----\n" << endl;
+    if (result.length() < 150) {
+        output << "Short-form: " << result << endl;
+    }
+    else {
+        output << "Short-form: " << abr << endl;
+        output << "Long-form: \n" << result << endl;
+    }
+
+    output.close();
+    cout << "\nResults got exported to " << hashCode(x) << "-" << suffix << ".txt" << endl;
+
+    return;
 }
 
-string factorial(cpp_int x, string& calcTime, string& strgTime) {
+
+void factorial(mpz_class x, string& calcTime, string& strgTime) {
     if (x < 0) {
         throw(runtime_error("factorial of negative."));
     }
@@ -181,22 +220,22 @@ string factorial(cpp_int x, string& calcTime, string& strgTime) {
     auto startCalc = chrono::high_resolution_clock::now();
 
     if (x == 0) {
-        return "1";
+        print(0, 1, "factorial", "fact", startCalc);
+        return;
     }
 
-    cpp_int result = 1;
+    mpz_class result = 1;
     if (x > 0) {
-        for (cpp_int i = 1; i <= x; i++) {
+        for (mpz_class i = 1; i <= x; i++) {
             result *= i;
         }
     }
 
-    string str = stringify(result, calcTime, strgTime, startCalc);
-
-    return str;
+    print(x, result, "factorial", "fact", startCalc);
+    return;
 }
 
-string double_factorial(cpp_int x, string& calcTime, string& strgTime) {
+void double_factorial(mpz_class x, string& calcTime, string& strgTime) {
     if (x < 0) {
         throw(runtime_error("factorial of negative."));
     }
@@ -206,22 +245,22 @@ string double_factorial(cpp_int x, string& calcTime, string& strgTime) {
     auto startCalc = chrono::high_resolution_clock::now();
 
     if (x == 0) {
-        return "1";
+        print(0, 1, "double factorial", "dfac", startCalc);
+        return;
     }
 
-    cpp_int result = 1;
+    mpz_class result = 1;
     if (x > 0) {
-        for (cpp_int i = x; i >= 1; i -= 2) {
+        for (mpz_class i = x; i >= 1; i -= 2) {
             result *= i;
         }
     }
 
-    string str = stringify(result, calcTime, strgTime, startCalc);
-
-    return str;
+    print(x, result, "double factorial", "dfac", startCalc);
+    return;
 }
 
-string termial(cpp_int x, string& calcTime, string& strgTime) {
+void termial(mpz_class x, string& calcTime, string& strgTime) {
     if (x < 0) {
         throw(runtime_error("termial of negative."));
     }
@@ -230,45 +269,10 @@ string termial(cpp_int x, string& calcTime, string& strgTime) {
 
     auto startCalc = chrono::high_resolution_clock::now();
 
-    cpp_int result = (x * (x + 1)) / 2;
-    string str = stringify(result, calcTime, strgTime, startCalc);
+    mpz_class result = (x * (x + 1)) / 2;
 
-    return str;
-}
-
-void print(string arg, cpp_int x, string func, int func_id, string calcTime, string strgTime) {
-
-    if (arg.length() < 150) {
-        cout << x << func << " = " << arg << endl;
-    }
-    else {
-        cout << x << func << " = " << arg[0] << "." << arg.substr(1, 100) << "E+" << arg.length() << endl;
-    }
-
-    ofstream output(hashCode(x) + "-" + FUNCTION_FILE_SUFFIX[func_id] + ".txt");
-
-    if (!output.is_open()) {
-        throw(runtime_error("could not open output file."));
-    }
-
-    output << "----- NO-LIMIT FACTORIAL REPORT -----\n" << endl;
-    output << "Input: " << FUNCTION_LIST_LANG[func_id] << " of " << x << '\n' << '\n';
-
-    output << "Calculations [==========][COMPLETED in " << calcTime << "]\n"
-              "Stringing    [==========][COMPLETED in " << strgTime << "]\n\n";
-
-    output << "----- NO-LIMIT FACTORIAL RESULT -----\n" << endl;
-    if (arg.length() < 150) {
-        output << "Short-form: " << arg << endl;
-    }
-    else {
-        output << "Short-form: " << arg[0] << "." << arg.substr(1,100) << "E+" << arg.length() << endl;
-        output << "Long-form: \n" << arg << endl;
-    }
-
-    output.close();
-    cout << "\nResults got exported to " << hashCode(x) << "-" << FUNCTION_FILE_SUFFIX[func_id] << ".txt" << endl;
-
+    print(x, result, "termial", "term", startCalc);
+    return;
 }
 
 int main() {
@@ -333,25 +337,23 @@ int main() {
         }
     }
 
-    cpp_int x(value);
+    mpz_class x(value);
     string calcTime, strgTime;
     string result;
 
     switch (func_id) {
         case 0:
-            result = factorial(x, calcTime, strgTime);
+            factorial(x, calcTime, strgTime);
             break;
 
         case 1:
-            result = double_factorial(x, calcTime, strgTime);
+            double_factorial(x, calcTime, strgTime);
             break;
 
         case 2:
-            result = termial(x, calcTime, strgTime);
+            termial(x, calcTime, strgTime);
             break;
     }
-
-    print(result, x, func, func_id, calcTime, strgTime);
 
     cin.ignore();
     cin.get();
